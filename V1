@@ -44,7 +44,7 @@ local InfYSection = PlayerTab:CreateSection("InfY")
 -- Notify user to join Discord
 Rayfield:Notify({
     Title = "Join FHXX Scripts Discord",
-    Content = "https://discord.gg/mm3thHMpDW",
+    Content = "https://discord.gg/fmtuTC3rGE",
     Duration = 9,
     Image = nil,
     Actions = {
