@@ -104,7 +104,7 @@ end
 -- Set AimLock Key Input
 local SetKeyButton = AimLockTab:CreateInput({
     Name = "Set AimLock Key",
-    PlaceholderText = "Enter key (Letters or Spaces)",
+    PlaceholderText = "Enter key (Letters Only)",
     RemoveTextAfterFocusLost = false,
     Callback = function(key)
         local keycode = stringToKeyCode(key)
