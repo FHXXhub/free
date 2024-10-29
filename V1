@@ -89,9 +89,37 @@ local Slider = PlayerTab:CreateSlider({
     end
 })
 
--- AimLock Tab
+-- Function to convert user input to Enum.KeyCode
+local function stringToKeyCode(input)
+    if input:lower() == "space" then
+        return Enum.KeyCode.Space
+    else
+        local success, keycode = pcall(function()
+            return Enum.KeyCode[input:upper()]
+        end)
+        return success and keycode or nil
+    end
+end
+
+-- Set AimLock Key Input
+local SetKeyButton = AimLockTab:CreateInput({
+    Name = "Set AimLock Key",
+    PlaceholderText = "Enter key (Letters or Spaces)",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(key)
+        local keycode = stringToKeyCode(key)
+        if keycode then
+            aimlockKey = keycode
+            print("AimLock key set to: " .. key:upper())
+        else
+            print("Invalid key. Please enter a valid key like a single letter, number, or 'space'.")
+        end
+    end
+})
+
+-- AimLock Button with Custom Key
 local Button = AimLockTab:CreateButton({
-    Name = "AimLock Key Is Q",
+    Name = "Activate AimLock",
     Callback = function()
         local players = game:GetService("Players")
         local uis = game:GetService("UserInputService")
@@ -130,15 +158,15 @@ local Button = AimLockTab:CreateButton({
         end
 
         uis.InputBegan:Connect(function(input)
-            if input.KeyCode == Enum.KeyCode.Q then
+            if input.KeyCode == aimlockKey then
                 if targetLocked then
                     targetLocked = false
                     currentTarget = nil
-                    print("Aimlock Disabled")
+                    print("AimLock Disabled")
                 else
                     targetLocked = true
                     lockOnTarget()
-                    print("Aimlock Enabled")
+                    print("AimLock Enabled")
                 end
             end
         end)
