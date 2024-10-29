@@ -10,7 +10,7 @@ local Window = Rayfield:CreateWindow({
     },
     Discord = {
         Enabled = true,
-        Invite = "https://discord.gg/fmtuTC3rGE", -- Use only the invite code, not the full URL
+        Invite = "fmtuTC3rGE",
         RememberJoins = false
     },
     KeySystem = true, -- Enable key system
