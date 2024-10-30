@@ -32,11 +32,11 @@ local MainSection = MainTab:CreateSection("Info")
 local PlayerTab = Window:CreateTab("Player")
 local PlayerSection = PlayerTab:CreateSection("Player")
 
-local AimLockTab = Window:CreateTab("AimLock")
-local AimLockSection = AimLockTab:CreateSection("AimLock")
-
 local ESPTab = Window:CreateTab("ESP")
 local ESPSection = ESPTab:CreateSection("ESP")
+
+local AimLockTab = Window:CreateTab("AimLock")
+local AimLockSection = AimLockTab:CreateSection("AimLock")
 
 local InfYTab = Window:CreateTab("Inf Yeld")
 local InfYSection = PlayerTab:CreateSection("InfY")
@@ -290,7 +290,7 @@ local Button = ESPTab:CreateButton({
 local Button = ESPTab:CreateButton({
    Name = "Names",
    Callback = function()
-            -- Services
+-- Services
 local players = game:GetService("Players")
 local runService = game:GetService("RunService")
 local camera = workspace.CurrentCamera
@@ -305,7 +305,7 @@ local function createNameEsp(player)
 
     local drawing = Drawing.new("Text")
     drawing.Text = player.Name
-    drawing.Size = 14
+    drawing.Size = 8  -- Smaller text size
     drawing.Color = Color3.new(1, 1, 1) -- White text
     drawing.Outline = true
     drawing.OutlineColor = Color3.new(0, 0, 0) -- Black outline
@@ -331,7 +331,8 @@ local function updateNameEsp(player, drawing)
         local screenPosition, onScreen = camera:WorldToViewportPoint(headPosition)
 
         if onScreen then
-            drawing.Position = Vector2.new(screenPosition.X, screenPosition.Y - 20) -- Offset above head
+            -- Offset below the head for the name label
+            drawing.Position = Vector2.new(screenPosition.X, screenPosition.Y + 20) -- Adjusted offset below the head
             drawing.Visible = true
         else
             drawing.Visible = false
@@ -362,9 +363,6 @@ runService.RenderStepped:Connect(function()
         updateNameEsp(player, drawing)
     end
 end)
-
-   end,
-})
 
 local Button = ESPTab:CreateButton({
    Name = "ShowGuns May Not Work",
