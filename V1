@@ -288,7 +288,7 @@ local EspNamesButton = ESPTab:CreateButton({
 local aimlockKey
 local SetKeyButton = AimLockTab:CreateInput({
     Name = "Set AimLock Key",
-    PlaceholderText = "Enter key (Letters Only)",
+    PlaceholderText = "(Letters Only)",
     RemoveTextAfterFocusLost = false,
     Callback = function(key)
         aimlockKey = Enum.KeyCode[key:upper()]
