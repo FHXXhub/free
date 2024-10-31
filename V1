@@ -51,7 +51,7 @@ Rayfield:Notify({
         Ignore = {
             Name = "Okay!",
             Callback = function()
-                print("The user tapped Okay!")
+                print("You Tapped Okay!")
             end
         }
     }
