@@ -338,7 +338,7 @@ local Button = ESPTab:CreateButton({
 
 -- Inf Yield Button
 local InfYieldButton = InfYTab:CreateButton({
-    Name = "Execute Inf Yield",
+    Name = "Infinite Yield",
     Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
     end
