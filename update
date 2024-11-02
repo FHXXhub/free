@@ -161,79 +161,71 @@ end)
    end,
 })
 
--- Set AimLock Key Input
-local SetKeyButton = AimlockTab:CreateInput({
+-- Textbox to input aim lock key
+local KeyInput = AimlockTab:CreateInput({
     Name = "Set AimLock Key",
-    PlaceholderText = "(Enter Letters Only)",
+    PlaceholderText = "Enter Key (Any Key)",
     RemoveTextAfterFocusLost = false,
-    Callback = function(key)
-        local keycode = stringToKeyCode(key)
-        if keycode then
-            aimlockKey = keycode
-            print("AimLock key set to: " .. key:upper())
-        else
-            print("Invalid key")
-        end
+    Callback = function(inputKey)
+        AimLockKey = inputKey:lower() -- set the aim lock key to user input in lowercase
     end
 })
 
--- AimLock Button with Custom Key
+-- Aim Lock Button with user-defined key
 local Button = AimlockTab:CreateButton({
     Name = "Activate AimLock",
     Callback = function()
-        local players = game:GetService("Players")
-        local uis = game:GetService("UserInputService")
-        local runService = game:GetService("RunService")
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local LocalPlayer = Players.LocalPlayer
+        local CamlockState = false
+        local Prediction = 0.1398237
+        local enemy = nil
 
-        local targetLocked = false
-        local currentTarget = nil
-
-        local function aimAt(target)
-            local camera = workspace.CurrentCamera
-            local startPos = camera.CFrame.Position
-            local endPos = target.Character.Head.Position
-            camera.CFrame = CFrame.new(startPos, endPos)
-        end
-
-        local function lockOnTarget()
-            local mouseLocation = uis:GetMouseLocation()
-            local closestPlayer
-            local shortestDistance = math.huge
-
-            for _, player in pairs(players:GetPlayers()) do
-                if player ~= players.LocalPlayer and player.Character and player.Character:FindFirstChild("Head") then
-                    local headPos = player.Character.Head.Position
-                    local screenPos, onScreen = workspace.CurrentCamera:WorldToViewportPoint(headPos)
-                    if onScreen then
-                        local distance = (Vector2.new(screenPos.X, screenPos.Y) - mouseLocation).Magnitude
-                        if distance < shortestDistance then
-                            closestPlayer = player
-                            shortestDistance = distance
+        -- Function to find nearest enemy
+        local function FindNearestEnemy()
+            local ClosestDistance, ClosestPlayer = math.huge, nil
+            local CenterPosition = Vector2.new(
+                game:GetService("GuiService"):GetScreenResolution().X / 2,
+                game:GetService("GuiService"):GetScreenResolution().Y / 2
+            )
+            for _, Player in ipairs(Players:GetPlayers()) do
+                if Player ~= LocalPlayer then
+                    local Character = Player.Character
+                    if Character and Character:FindFirstChild("HumanoidRootPart") and Character.Humanoid.Health > 0 then
+                        local Position, OnScreen = workspace.CurrentCamera:WorldToViewportPoint(Character.HumanoidRootPart.Position)
+                        if OnScreen then
+                            local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
+                            if Distance < ClosestDistance then
+                                ClosestPlayer = Character.HumanoidRootPart
+                                ClosestDistance = Distance
+                            end
                         end
                     end
                 end
             end
-
-            currentTarget = closestPlayer
+            return ClosestPlayer
         end
 
-        uis.InputBegan:Connect(function(input)
-            if input.KeyCode == aimlockKey then
-                if targetLocked then
-                    targetLocked = false
-                    currentTarget = nil
-                    print("AimLock Disabled")
-                else
-                    targetLocked = true
-                    lockOnTarget()
-                    print("AimLock Enabled")
-                end
+        -- Camera lock loop
+        RunService.Heartbeat:Connect(function()
+            if CamlockState and enemy then
+                workspace.CurrentCamera.CFrame = CFrame.new(
+                    workspace.CurrentCamera.CFrame.p,
+                    enemy.Position + enemy.Velocity * Prediction
+                )
             end
         end)
 
-        runService.RenderStepped:Connect(function()
-            if targetLocked and currentTarget and currentTarget.Character and currentTarget.Character:FindFirstChild("Head") then
-                aimAt(currentTarget)
+        -- Keybind to toggle aim lock with the user-defined key
+        LocalPlayer:GetMouse().KeyDown:Connect(function(key)
+            if key == AimLockKey then  -- check if pressed key matches user-defined key
+                CamlockState = not CamlockState
+                if CamlockState then
+                    enemy = FindNearestEnemy()
+                else
+                    enemy = nil
+                end
             end
         end)
     end
