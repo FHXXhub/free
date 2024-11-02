@@ -107,7 +107,7 @@ local PlayerSection = PlayerTab:CreateSection("Player")
 local ESPTab = Window:CreateTab("ESP", nil) -- Title, Image
 local ESPSection = ESPTab:CreateSection("ESP")
 
-local AimlockTab = Window:CreateTab("Aimlock Not Working Rn", nil) -- Title, Image
+local AimlockTab = Window:CreateTab("Aimlock", nil) -- Title, Image
 local AimlockSection = AimlockTab:CreateSection("Aimlock")
 
 local InfYTab = Window:CreateTab("Inf Yeld")
@@ -132,7 +132,7 @@ local InfiniteJumpButton = PlayerTab:CreateButton({
 -- Player Tab - Walk Speed
 local Slider = PlayerTab:CreateSlider({
     Name = "Walk Speed",
-    Range = {0, 23},
+    Range = {0, 1000},
     Increment = 1,
     Suffix = "Speed",
     CurrentValue = 16,
@@ -163,15 +163,44 @@ end)
 
 -- Textbox to input aim lock key
 local KeyInput = AimlockTab:CreateInput({
-    Name = "Set AimLock Key",
+    Name = "AimLock Key",
     PlaceholderText = "Enter Key (Any Key)",
     RemoveTextAfterFocusLost = false,
     Callback = function(inputKey)
-        AimLockKey = inputKey:lower() -- set the aim lock key to user input in lowercase
+        AimLockKey = inputKey:lower()
+        Rayfield:Notify({
+            Title = "Key Updated",
+            Content = "Aimlock key updated to: " .. AimLockKey,
+            Duration = 3
+        })
     end
 })
 
--- Aim Lock Button with user-defined key
+-- Textbox to input prediction factor
+local PredictionInput = AimlockTab:CreateInput({
+    Name = "AimLock Prediction",
+    PlaceholderText = "Enter Prediction (0.1 - 1)",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(inputPrediction)
+        local newPrediction = tonumber(inputPrediction)
+        if newPrediction then
+            PredictionFactor = newPrediction
+            Rayfield:Notify({
+                Title = "Prediction Updated",
+                Content = "Prediction factor set to: " .. tostring(PredictionFactor),
+                Duration = 3
+            })
+        else
+            Rayfield:Notify({
+                Title = "Invalid Input",
+                Content = "Please enter a valid number for prediction.",
+                Duration = 3
+            })
+        end
+    end
+})
+
+-- Aim Lock Button with user-defined key and prediction factor
 local Button = AimlockTab:CreateButton({
     Name = "Activate AimLock",
     Callback = function()
@@ -179,10 +208,9 @@ local Button = AimlockTab:CreateButton({
         local RunService = game:GetService("RunService")
         local LocalPlayer = Players.LocalPlayer
         local CamlockState = false
-        local Prediction = 0.1398237
         local enemy = nil
 
-        -- Function to find nearest enemy
+        -- Function to find nearest enemy and lock onto their head
         local function FindNearestEnemy()
             local ClosestDistance, ClosestPlayer = math.huge, nil
             local CenterPosition = Vector2.new(
@@ -192,12 +220,12 @@ local Button = AimlockTab:CreateButton({
             for _, Player in ipairs(Players:GetPlayers()) do
                 if Player ~= LocalPlayer then
                     local Character = Player.Character
-                    if Character and Character:FindFirstChild("HumanoidRootPart") and Character.Humanoid.Health > 0 then
-                        local Position, OnScreen = workspace.CurrentCamera:WorldToViewportPoint(Character.HumanoidRootPart.Position)
+                    if Character and Character:FindFirstChild("Head") and Character.Humanoid.Health > 0 then
+                        local Position, OnScreen = workspace.CurrentCamera:WorldToViewportPoint(Character.Head.Position)
                         if OnScreen then
                             local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
                             if Distance < ClosestDistance then
-                                ClosestPlayer = Character.HumanoidRootPart
+                                ClosestPlayer = Character.Head -- Target the Head
                                 ClosestDistance = Distance
                             end
                         end
@@ -207,19 +235,25 @@ local Button = AimlockTab:CreateButton({
             return ClosestPlayer
         end
 
+        -- Function to apply prediction to the enemy position
+        local function GetPredictedPosition(enemyHead)
+            if enemyHead and enemyHead.Velocity then
+                return enemyHead.Position + (enemyHead.Velocity * PredictionFactor)
+            end
+            return enemyHead.Position
+        end
+
         -- Camera lock loop
         RunService.Heartbeat:Connect(function()
             if CamlockState and enemy then
-                workspace.CurrentCamera.CFrame = CFrame.new(
-                    workspace.CurrentCamera.CFrame.p,
-                    enemy.Position + enemy.Velocity * Prediction
-                )
+                local targetPosition = GetPredictedPosition(enemy)
+                workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.p, targetPosition)
             end
         end)
 
         -- Keybind to toggle aim lock with the user-defined key
         LocalPlayer:GetMouse().KeyDown:Connect(function(key)
-            if key == AimLockKey then  -- check if pressed key matches user-defined key
+            if key == AimLockKey then
                 CamlockState = not CamlockState
                 if CamlockState then
                     enemy = FindNearestEnemy()
